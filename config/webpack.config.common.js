@@ -4,12 +4,12 @@ const webpack = require('webpack');
 const IS_DEV = process.env.NODE_ENV !== 'production';
 
 module.exports = {
-  mode: 'production',
   target: 'web',
   entry: ['./src/client/index.jsx'],
   output: {
     publicPath: '/',
-    path: resolve(__dirname, 'public'),
+                            // go back then go to the build folder then go into the client folder
+    path: resolve(__dirname, '..', 'build', 'client'),
     filename: '[name].js'
   },
   module: {
@@ -29,6 +29,9 @@ module.exports = {
       }
     ]
   },
+  plugins: [
+    new webpack.EnvironmentPlugin(['NODE_ENV'])
+  ],
   resolve: {
     modules: ['node_modules', join('src', 'client')],
     extensions: ['.js', '.jsx']

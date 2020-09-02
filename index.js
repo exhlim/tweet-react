@@ -1,4 +1,5 @@
 const express = require('express');
+const {resolve} = require('path');
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 
@@ -12,8 +13,31 @@ const app = express();
  * =======================================================================
  */
 
-app.use('/', express.static('public'));
 
+// providing a clientbuild path |||| this codes are
+let clientBuildPath;
+if( process.env.NODE_ENV === 'development' ){
+  const webpack = require('webpack');
+  const webpackDevMiddleware = require('webpack-dev-middleware');
+  const webpackHotMiddleware = require('webpack-hot-middleware');
+  const webpackConfig = require('./config/webpack.config.dev');
+  const compiler = webpack(webpackConfig);
+  app.use(
+    webpackDevMiddleware(compiler, {
+      publicPath: webpackConfig.output.publicPath,
+      stats: {
+        colors: true
+      }
+    })
+  );
+  app.use(webpackHotMiddleware(compiler));
+  clientBuildPath = resolve(__dirname, 'build-dev', 'client')
+  // all other requests be handled by UI itself
+}else{
+  clientBuildPath = resolve(__dirname, 'build', 'client');
+  app.use('/', express.static(clientBuildPath));
+}
+app.use('/', express.static('/public')
 /*
  * =======================================================================
  * ============== normal express routes go here   ========================
@@ -31,16 +55,8 @@ app.get('/banana', (request, response)=>{
  */
 
 app.get('/react', (req, res) => {
-  const myHtml = `
-    <html>
-      <body>
-        <h1>Wow, react</h1>
-        <div id="app"></div>
-        <script type="text/javascript" src="/main.js"></script>
-      </body>
-    </html>
-  `;
-  res.send( myHtml );
+    // resolves build the entire path so it becomes
+    res.sendFile(resolve(clientBuildPath, 'index.html'));
 });
 
 /*
